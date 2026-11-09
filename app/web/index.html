@@ -1,71 +1,94 @@
 <!doctype html>
+
 <html lang="es">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="light" />
+    <meta content="width=device-width, initial-scale=1" name="viewport" />
+    <meta content="light" name="color-scheme" />
     <title>PIMS · Centro de agentes</title>
     <link
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23e9e1d2'/%3E%3Ctext x='10' y='29' font-size='29' font-family='serif' fill='%239e3d28'%3EP%3C/text%3E%3C/svg%3E"
       rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%23164e45'/%3E%3Ctext x='12' y='29' font-size='28' font-family='sans-serif' fill='white'%3EP%3C/text%3E%3C/svg%3E"
     />
-    <link rel="stylesheet" href="/assets/panel.css" />
-    <script src="/assets/panel.js" defer></script>
+    <link
+      as="font"
+      crossorigin=""
+      href="/assets/fonts/Newsreader.woff2"
+      rel="preload"
+      type="font/woff2"
+    />
+    <link href="/assets/panel.css?v=editorial-1" rel="stylesheet" />
+    <script defer="" src="/assets/panel.js"></script>
   </head>
   <body>
     <a class="skip" href="#contenido">Ir al contenido</a>
-    <aside class="sidebar" aria-label="Navegación principal">
-      <a class="brand" href="#panel"
-        ><span class="brand-mark">P</span
-        ><span>PIMS<span class="brand-sub">CENTRO DE AGENTES</span></span></a
-      >
-      <p class="nav-caption">ESPACIO DE TRABAJO</p>
-      <nav>
+    <header class="masthead">
+      <div class="masthead-kicker">
+        <span>UNSA / SISTEMA DE GESTIÓN DE PRIVACIDAD</span
+        ><span>AREQUIPA, PERÚ</span>
+      </div>
+      <div class="masthead-main">
+        <a aria-label="PIMS, vista general" class="brand" href="#panel"
+          >PIMS<span class="brand-dot">.</span></a
+        >
+        <div class="masthead-context">
+          Centro de agentes<br /><span
+            >Evaluación · coordinación · seguimiento</span
+          >
+        </div>
+        <div class="edition">
+          <span>ESPACIO DE TRABAJO</span
+          ><strong>Privacidad de la información</strong>
+        </div>
+      </div>
+      <nav aria-label="Secciones del centro PIMS" class="main-nav">
         <button class="nav-item active" data-view="panel">
-          <span aria-hidden="true">◫</span> Vista general
+          <span aria-hidden="true">01</span> Vista general
         </button>
         <button class="nav-item" data-view="evaluar">
-          <span aria-hidden="true">＋</span> Nueva solicitud
+          <span aria-hidden="true">02</span> Nueva solicitud
         </button>
         <button class="nav-item" data-view="flujos">
-          <span aria-hidden="true">⇄</span> Flujos de trabajo
+          <span aria-hidden="true">03</span> Flujos de trabajo
         </button>
         <button class="nav-item" data-view="integracion">
-          <span aria-hidden="true">≡</span> Plan de integración
+          <span aria-hidden="true">04</span> Plan de integración
         </button>
       </nav>
-      <div class="sidebar-bottom">
-        <span class="university">UNSA</span>
-        <p>Gestión de privacidad<br />ISO/IEC 27701</p>
-        <a href="/docs" target="_blank" rel="noopener">Documentación API ↗</a
-        ><span class="version">Orquestador · v0.2</span>
-      </div>
-    </aside>
+    </header>
     <div class="workspace">
       <header class="topbar">
         <span
-          >Privacidad de la información <span class="slash">/</span>
-          <strong id="breadcrumb">Vista general</strong></span
+          >OPERACIONES<span class="slash">/</span
+          ><strong id="breadcrumb">Vista general</strong></span
         ><span class="server-state"
           ><i id="server-dot"></i
           ><span id="server-label">Conectando…</span></span
         >
       </header>
       <main id="contenido">
-        <section id="view-panel" class="view">
-          <div class="heading">
+        <section class="view" id="view-panel">
+          <div class="heading hero">
             <div>
-              <p class="eyebrow">PIMS MULTIAGENTE</p>
-              <h1>Un espacio para coordinar<br />la privacidad.</h1>
+              <p class="eyebrow">DIRECTORIO / 01 — 08</p>
+              <h1>Mesa de <em>privacidad.</em></h1>
               <p class="lead">
-                Ocho especialidades. Una entrada para tus solicitudes.
+                Coordina evaluaciones, incidentes y evidencias desde un mismo
+                punto de entrada.
               </p>
             </div>
-            <button class="primary" id="new-request">
-              Nueva solicitud <span aria-hidden="true">↗</span>
-            </button>
+
+            <div class="hero-action">
+              <p class="eyebrow">COMENZAR POR UN CASO</p>
+              <button class="primary" id="new-request">
+                Nueva solicitud <span aria-hidden="true">↗</span>
+              </button>
+              <p class="hero-hint">
+                Describe el escenario. Elige un agente. Revisa su respuesta.
+              </p>
+            </div>
           </div>
-          <div class="metrics" aria-label="Resumen de integración">
+          <div aria-label="Resumen de integración" class="metrics">
             <div>
               <span class="metric-number" id="count-agents">—</span
               ><span>Agentes registrados</span>
@@ -79,7 +102,7 @@
               ><span>Servicios que responden</span>
             </div>
             <div class="metric-note">
-              <span class="small-label">TU PRIMER RECORRIDO</span
+              <span class="small-label">RECORRIDO DISPONIBLE</span
               ><strong>Orquestador → Riesgos V3</strong
               ><span>Ejecuta un caso y consulta su evaluación guardada.</span>
             </div>
@@ -93,11 +116,11 @@
               ↻ Comprobar conexiones
             </button>
           </div>
-          <p id="connection-notice" class="quiet" role="status">
+          <p class="quiet" id="connection-notice" role="status">
             La conectividad se comprueba bajo demanda. Registrar un agente no lo
             conecta automáticamente.
           </p>
-          <div id="agent-grid" class="agent-grid" aria-live="polite"></div>
+          <div aria-live="polite" class="agent-grid" id="agent-grid"></div>
           <div class="note-strip">
             <span class="note-symbol">i</span>
             <p>
@@ -110,18 +133,18 @@
             >
           </div>
         </section>
-        <section id="view-evaluar" class="view" hidden>
+        <section class="view" hidden="" id="view-evaluar">
           <div class="heading compact">
             <div>
               <p class="eyebrow">EJECUCIÓN</p>
-              <h1>Nueva solicitud</h1>
+              <h1>Una nueva consulta.</h1>
               <p class="lead">
                 Describe el caso y elige cómo quieres analizarlo.
               </p>
             </div>
           </div>
           <div class="execution-layout">
-            <form id="request-form" class="surface form-panel">
+            <form class="surface form-panel" id="request-form">
               <label for="operation">Tipo de solicitud</label
               ><select id="operation">
                 <option value="riesgos">Evaluación de Riesgos · V3</option>
@@ -134,17 +157,17 @@
               </p>
               <div class="label-row">
                 <label for="description">Escenario a analizar</label
-                ><button class="text-button" type="button" id="example">
+                ><button class="text-button" id="example" type="button">
                   Usar ejemplo ficticio
                 </button>
               </div>
               <textarea
                 id="description"
-                rows="7"
-                minlength="10"
                 maxlength="5000"
-                required
+                minlength="10"
                 placeholder="Describe los datos involucrados, lo ocurrido y los controles que conoces…"
+                required=""
+                rows="7"
               ></textarea>
               <p class="field-help">
                 Expón hechos conocidos. Los controles que no mencionas deben
@@ -159,7 +182,7 @@
                       <option value="1">1 · Muy baja</option>
                       <option value="2">2 · Baja</option>
                       <option value="3">3 · Media</option>
-                      <option value="4" selected>4 · Alta</option>
+                      <option selected="" value="4">4 · Alta</option>
                       <option value="5">5 · Muy alta</option>
                     </select>
                   </div>
@@ -169,7 +192,7 @@
                       <option value="1">1 · Muy bajo</option>
                       <option value="2">2 · Bajo</option>
                       <option value="3">3 · Medio</option>
-                      <option value="4" selected>4 · Alto</option>
+                      <option selected="" value="4">4 · Alto</option>
                       <option value="5">5 · Muy alto</option>
                     </select>
                   </div>
@@ -183,16 +206,16 @@
                   <option value="no_definido">Por definir</option>
                 </select>
                 <label class="check"
-                  ><input type="checkbox" id="require-ai" checked /><span
+                  ><input checked="" id="require-ai" type="checkbox" /><span
                     >Exigir respuesta de IA en la evaluación de riesgos</span
                   ></label
                 >
               </fieldset>
-              <div id="flow-caution" class="inline-note" hidden>
+              <div class="inline-note" hidden="" id="flow-caution">
                 Necesita ambos servicios accesibles. Incidentes se ejecuta
                 primero; si falla, el flujo se detiene.
               </div>
-              <button class="primary submit" type="submit" id="execute">
+              <button class="primary submit" id="execute" type="submit">
                 Ejecutar solicitud <span aria-hidden="true">→</span>
               </button>
               <p class="field-help">
@@ -211,23 +234,23 @@
                   centro no aprueba contratos ni aplica medidas automáticamente.
                 </p>
               </div>
-              <a href="/docs" target="_blank" rel="noopener"
+              <a href="/docs" rel="noopener" target="_blank"
                 >Consultar contrato de la API ↗</a
               >
             </aside>
           </div>
           <div
-            id="execution-status"
-            class="execution-status"
-            role="status"
             aria-live="polite"
-            hidden
+            class="execution-status"
+            hidden=""
+            id="execution-status"
+            role="status"
           ></div>
           <section
-            id="result-panel"
-            class="surface result-panel"
             aria-label="Resultado de la solicitud"
-            hidden
+            class="surface result-panel"
+            hidden=""
+            id="result-panel"
           >
             <div class="section-heading">
               <div>
@@ -237,7 +260,7 @@
               <div class="result-actions">
                 <button class="secondary" id="download-result">
                   Descargar JSON</button
-                ><button class="secondary" id="download-report" hidden>
+                ><button class="secondary" hidden="" id="download-report">
                   Descargar reporte
                 </button>
               </div>
@@ -249,11 +272,11 @@
             </details>
           </section>
         </section>
-        <section id="view-flujos" class="view" hidden>
+        <section class="view" hidden="" id="view-flujos">
           <div class="heading compact">
             <div>
               <p class="eyebrow">ORQUESTACIÓN</p>
-              <h1>Flujos de trabajo</h1>
+              <h1>Trabajar en conjunto.</h1>
               <p class="lead">
                 Un caso puede necesitar más de una especialidad.
               </p>
@@ -296,11 +319,11 @@
             </button>
           </article>
         </section>
-        <section id="view-integracion" class="view" hidden>
+        <section class="view" hidden="" id="view-integracion">
           <div class="heading compact">
             <div>
               <p class="eyebrow">HOJA DE RUTA</p>
-              <h1>Conectar con propósito.</h1>
+              <h1>La ruta de integración.</h1>
               <p class="lead">
                 Adaptamos las capacidades existentes de cada grupo, una
                 operación a la vez.
@@ -324,17 +347,17 @@
         </section>
         <dialog id="agent-dialog">
           <button
-            id="close-dialog"
-            class="dialog-close"
             aria-label="Cerrar detalle"
+            class="dialog-close"
+            id="close-dialog"
           >
             ×
           </button>
           <div id="agent-detail"></div>
         </dialog>
         <footer>
-          PIMS · Universidad Nacional de San Agustín de Arequipa
-          <span>Proyecto académico · revisión humana de resultados</span>
+          <span>PIMS / Universidad Nacional de San Agustín de Arequipa</span
+          ><span>Trabajo académico · Resultados sujetos a revisión humana</span>
         </footer>
       </main>
     </div>

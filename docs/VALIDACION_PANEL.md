@@ -30,3 +30,12 @@ verifican interacciones, no renderizado o dimensiones de la página.
 6. Con Incidentes apagado/no configurado, ejecutar su flujo y comprobar que no
    aparece un resultado de Riesgos inventado.
 7. Revisar panel, formulario y modal con teclado y a 390 px de ancho.
+
+
+## Rediseño editorial
+
+Se reemplaza la barra lateral por cabecera y navegación horizontal. El directorio
+usa filas en vez de tarjetas; la paleta es papel, carbón y rojo óxido. Newsreader
+y Public Sans se sirven localmente, junto con sus licencias. El rediseño conserva
+los identificadores DOM y los contratos del panel, y pasó nuevamente las mismas
+12 pruebas Python y las pruebas DOM. No hay cambios de base de datos ni APIs.
