@@ -2,7 +2,7 @@
 
 Prototipo de **orquestación externa** de ocho proyectos agénticos para un sistema de gestión de privacidad (PIMS). Conserva los repositorios originales: este servicio solo conoce sus interfaces y coordina los resultados.
 
-> **Estado v0.2:** interfaz central en `/`, catálogo de ocho agentes, formulario de Riesgos/Incidentes, flujo secuencial y conectividad bajo demanda. Riesgos V3 ya fue probado por el usuario a través del orquestador en Ubuntu; los otros agentes no se han validado en ejecución conjunta. Seis adaptadores siguen pendientes.
+> **Estado v0.3:** un objetivo coordina Incidentes, Terceros, Evidencias y Riesgos desde una sola solicitud. Pasa resultados reales a Riesgos, muestra progreso e informe integrado y señala servicios/datos pendientes. Cuatro adaptadores están implementados; su prueba distribuida requiere que los grupos publiquen sus servicios. Los otros cuatro siguen pendientes.
 
 ## Arquitectura
 
@@ -108,3 +108,33 @@ NODE_PATH=/tmp/pims-panel-dom/node_modules node tests/panel_dom.cjs
 Esta prueba comprueba formularios, navegación, catálogo, errores, selección de flujos,
 salida segura y la prevención de envíos duplicados; usa respuestas simuladas y no
 sustituye una prueba visual en Firefox ni una ejecución con los agentes reales.
+
+
+## Orquestación distribuida: una sola solicitud
+
+Lee [la guía para compañeros](docs/CONECTAR_GRUPOS.md). Cada grupo ejecuta su
+agente, Ollama y su base en **su propio equipo**, y publica solo el puente privado.
+No copies los ocho proyectos a la laptop del orquestador.
+
+En el panel selecciona **Analizar incidente con proveedor** (opción predeterminada),
+escribe el caso, consulta el catálogo de proveedores y elige un ID. Se ejecutan:
+
+1. Incidentes: análisis del evento.
+2. Terceros: ficha real, DPA y riesgo del proveedor.
+3. Evidencias: consulta de cobertura e integridad del expediente UNSA (solo lectura).
+4. Riesgos: evaluación con el escenario original y contexto atribuido de los tres anteriores.
+5. Consolidación: informe, intercambios y acciones pendientes. Las decisiones siguen siendo humanas.
+
+Si falta un servicio, el informe es **parcial**. Riesgos puede trabajar con el
+escenario original; eso no se presenta como colaboración completada. El proveedor
+no se adivina por nombre y las matrices 4×4 y 5×5 permanecen diferenciadas.
+
+El objetivo se inicia con `POST /api/ejecuciones` y se sigue con
+`GET /api/ejecuciones/{solicitud_id}`. El panel consulta estados reales por paso.
+No volver a pulsar Ejecutar para consultar el estado. Los detalles se conservan
+en memoria hasta una hora después de finalizar, con máximo 30 registros y un solo
+flujo activo. Reiniciar el orquestador pierde este registro; no borra historiales
+de los agentes. Ejecutar Uvicorn con **un solo worker**, como en los ejemplos.
+
+La consulta de Evidencias no registra archivos ni relaciona automáticamente el
+análisis con un expediente. El informe integrado prepara esa revisión humana.

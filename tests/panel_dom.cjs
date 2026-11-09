@@ -59,7 +59,9 @@ let nextResponse = {
   },
 };
 w.fetch = async (url, options) => {
-  if (!options) {
+  if (!options || !options.method) {
+    if (url.startsWith("/api/ejecuciones/"))
+      return { ok: true, json: async () => nextResponse };
     if (url === "/api/agentes/estado")
       return {
         ok: true,
@@ -79,12 +81,27 @@ w.fetch = async (url, options) => {
     return { ok: true, json: async () => agents };
   }
   calls.push({ url, body: JSON.parse(options.body) });
+  if (url === "/api/ejecuciones")
+    return {
+      ok: true,
+      json: async () => ({
+        solicitud_id: "flujo-prueba",
+        estado: "en_curso",
+        pasos: [
+          {
+            agente: "incidentes",
+            titulo: "Analizar incidente",
+            estado: "en_curso",
+          },
+        ],
+      }),
+    };
   await new Promise((resolve) => setTimeout(resolve, 10));
   return { ok: true, json: async () => nextResponse };
 };
 const $ = (id) => w.document.getElementById(id);
 const waitFor = async (predicate) => {
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 400; i++) {
     if (predicate()) return;
     await new Promise((r) => setTimeout(r, 5));
   }
@@ -99,7 +116,7 @@ function submit() {
   w.eval(fs.readFileSync(path.join(root, "app/web/panel.js"), "utf8"));
   await waitFor(() => w.document.querySelectorAll(".agent-card").length === 8);
   assert.equal($("count-agents").textContent, "08");
-  assert.equal($("count-adapters").textContent, "02");
+  assert.equal($("count-adapters").textContent, "04");
   assert.equal($("count-online").textContent, "—");
   assert.equal(w.document.querySelectorAll(".plan-row").length, 8);
   $("check-connections").click();
@@ -107,6 +124,8 @@ function submit() {
   assert.equal($("count-online").textContent, "01");
   $("new-request").click();
   assert.equal($("view-evaluar").hidden, false);
+  $("operation").value = "riesgos";
+  $("operation").dispatchEvent(new w.Event("change"));
   $("example").click();
   submit();
   submit();
@@ -144,8 +163,10 @@ function submit() {
   assert.equal("descripcion" in calls[1].body.entrada, false);
   assert($("result-content").textContent.includes("Falta URL del agente"));
   $("open-flow").click();
-  assert.equal($("operation").value, "flujo");
+  assert.equal($("operation").value, "objetivo");
   assert.equal($("flow-caution").hidden, false);
+  $("operation").value = "flujo";
+  $("operation").dispatchEvent(new w.Event("change"));
   nextResponse = {
     estado: "incompleto",
     pasos: [
@@ -162,7 +183,7 @@ function submit() {
   assert($("result-content").textContent.includes("No se ejecutó Riesgos."));
   const pendingButton = [
     ...w.document.querySelectorAll(".agent-card button"),
-  ].find((b) => b.textContent.includes("Ver integración"));
+  ].find((b) => b.textContent.includes("Ver detalle"));
   pendingButton.click();
   assert.equal($("agent-dialog").open, true);
   assert(
@@ -170,6 +191,56 @@ function submit() {
   );
   $("close-dialog").click();
   assert.equal($("agent-dialog").open, false);
+  $("new-request").click();
+  $("provider-id").value = "4";
+  nextResponse = {
+    solicitud_id: "flujo-prueba",
+    objetivo: "incidente_proveedor",
+    estado: "completado",
+    pasos: [
+      {
+        agente: "incidentes",
+        estado: "completado",
+        resultado: { evento: "enlace abierto" },
+      },
+      {
+        agente: "terceros",
+        estado: "completado",
+        resultado: { dpa: { estado: "vencido" } },
+      },
+      {
+        agente: "evidencias",
+        estado: "completado",
+        resultado: { porcentaje_cobertura: 50 },
+      },
+      {
+        agente: "riesgos",
+        estado: "completado",
+        resultado: { puntaje: 16, experimento_id: "id-guardado" },
+      },
+    ],
+    resumen: {
+      agentes_con_resultado: [
+        "incidentes",
+        "terceros",
+        "evidencias",
+        "riesgos",
+      ],
+      colaboracion_efectiva: true,
+    },
+    intercambios: [{ origen: "terceros", destino: "riesgos", uso: "contexto" }],
+    pendientes: [{ agente: "revision_humana", accion: "Revisar" }],
+    informe_integrado: "Reporte integrado de prueba",
+  };
+  submit();
+  await waitFor(() => !$("execute").disabled);
+  assert.equal(calls[3].url, "/api/ejecuciones");
+  assert.equal(calls[3].body.proveedor_id, 4);
+  assert.equal($("live-progress").hidden, false);
+  assert.equal($("live-steps").querySelectorAll(".trace-step").length, 4);
+  assert($("result-content").textContent.includes("4 de 4 agentes"));
+  assert($("result-content").textContent.includes("terceros → riesgos"));
+  assert.equal($("download-report").hidden, false);
   assert.deepEqual(errors, []);
   console.log(
     "DOM OK: catálogo, navegación, conexiones, formulario real, errores, flujo, modal y salida segura.",

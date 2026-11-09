@@ -84,11 +84,16 @@ function renderAgents() {
     card.append(top, el("h3", a.nombre), el("p", a.descripcion));
     const bottom = el("div", null, "card-bottom");
     bottom.append(
-      el("span", a.operacion ? "Adaptador HTTP" : "Adaptador pendiente"),
+      el(
+        "span",
+        a.integracion !== "pendiente"
+          ? "Adaptador disponible"
+          : "Adaptador pendiente",
+      ),
     );
     const b = el(
       "button",
-      a.operacion ? "Preparar solicitud ↗" : "Ver integración →",
+      a.operacion ? "Preparar solicitud ↗" : "Ver detalle →",
       "text-button",
     );
     b.type = "button";
@@ -99,7 +104,7 @@ function renderAgents() {
   }
   $("count-agents").textContent = String(state.agents.length).padStart(2, "0");
   $("count-adapters").textContent = String(
-    state.agents.filter((a) => a.operacion).length,
+    state.agents.filter((a) => a.integracion !== "pendiente").length,
   ).padStart(2, "0");
   if (
     state.agents.some(
@@ -196,9 +201,13 @@ async function checkConnections() {
 function updateOperation() {
   const op = $("operation").value;
   $("risk-fields").hidden = op === "incidentes";
-  $("flow-caution").hidden = op !== "flujo";
+  $("provider-fields").hidden = op !== "objetivo";
+  $("provider-id").disabled = op !== "objetivo";
+  $("flow-caution").hidden = !["flujo", "objetivo"].includes(op);
   $("description").maxLength = op === "riesgos" ? 5000 : 2000;
   const help = {
+    objetivo:
+      "Una solicitud coordina Incidentes, Terceros, Evidencias y Riesgos. Los resultados se atribuyen a cada agente; las conexiones ausentes quedan pendientes.",
     riesgos:
       "Envía el caso a V3 y devuelve su evaluación. El agente conserva el resultado en su propia base.",
     incidentes:
@@ -208,6 +217,15 @@ function updateOperation() {
   };
   $("operation-help").textContent = help[op];
   const routes = {
+    objetivo: [
+      ["Incidentes", "Analiza el evento descrito."],
+      ["Terceros", "Consulta proveedor, DPA y su matriz 4×4."],
+      ["Evidencias", "Consulta cobertura e integridad del expediente UNSA."],
+      [
+        "Riesgos",
+        "Usa las respuestas anteriores como contexto. Se consolida un informe.",
+      ],
+    ],
     riesgos: [
       ["Orquestador", "Valida y envía tu solicitud."],
       [
@@ -257,7 +275,9 @@ function renderResult(response, seconds) {
   $("result-title").textContent =
     response.estado === "completado"
       ? "Solicitud completada"
-      : "La solicitud necesita atención";
+      : response.estado === "parcial"
+        ? "Informe parcial: revisa los pendientes"
+        : "La solicitud necesita atención";
   root.append(
     el(
       "p",
@@ -281,6 +301,51 @@ function renderResult(response, seconds) {
     );
     root.append(row);
     if (s.error) root.append(el("p", s.error, "result-alert"));
+  }
+  if (response.objetivo) {
+    const box = el("section", null, "result-block");
+    box.append(el("h3", "Trabajo realizado en conjunto"));
+    const total = (response.resumen?.agentes_con_resultado || []).length;
+    box.append(
+      el(
+        "p",
+        total +
+          " de 4 agentes aportaron un resultado. " +
+          (response.resumen?.colaboracion_efectiva
+            ? "Riesgos recibió contexto de otros agentes."
+            : "No se pudo completar el intercambio entre agentes."),
+      ),
+    );
+    addList(
+      box,
+      "Información compartida",
+      (response.intercambios || []).map(
+        (x) => x.origen + " → " + x.destino + ": " + x.uso,
+      ),
+    );
+    addList(
+      box,
+      "Acciones pendientes",
+      (response.pendientes || []).map((x) => x.agente + ": " + x.accion),
+    );
+    root.append(box);
+    for (const step of steps.filter(
+      (x) =>
+        ["terceros", "evidencias"].includes(x.agente) &&
+        x.estado === "completado",
+    )) {
+      const d = el("details");
+      d.append(
+        el(
+          "summary",
+          step.agente === "terceros"
+            ? "Ficha del proveedor y DPA consultados"
+            : "Cobertura e integridad consultadas",
+        ),
+      );
+      d.append(el("pre", JSON.stringify(step.resultado, null, 2)));
+      root.append(d);
+    }
   }
   if (response.mensaje) root.append(el("p", response.mensaje, "quiet"));
   const rs = steps.find(
@@ -376,6 +441,7 @@ function renderResult(response, seconds) {
         "quiet",
       ),
     );
+  if (response.informe_integrado) state.report = response.informe_integrado;
   $("download-report").hidden = !state.report;
 }
 async function execute(event) {
@@ -416,6 +482,7 @@ async function execute(event) {
   $("execute").disabled = true;
   $("execute").textContent = "Solicitud en curso…";
   $("result-panel").hidden = true;
+  $("live-progress").hidden = true;
   const started = performance.now();
   const status = $("execution-status");
   status.hidden = false;
@@ -423,7 +490,7 @@ async function execute(event) {
   const update = () => {
     status.textContent =
       "Solicitud enviada. Esperando respuesta " +
-      (op === "flujo" ? "de los agentes" : "del agente") +
+      (["flujo", "objetivo"].includes(op) ? "de los agentes" : "del agente") +
       "… " +
       Math.round((performance.now() - started) / 1000) +
       " s. No cierres esta página.";
@@ -433,22 +500,62 @@ async function execute(event) {
   const controller = new AbortController();
   const timeout = setTimeout(
     () => controller.abort(),
-    op === "flujo" ? 620000 : 310000,
+    ["flujo", "objetivo"].includes(op) ? 660000 : 310000,
   );
   try {
-    const r = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-      signal: controller.signal,
-    });
-    const response = await r.json();
-    if (!r.ok)
-      throw Error(
-        typeof response.detail === "string"
-          ? response.detail
-          : "El servidor rechazó la solicitud. Revisa los datos o la conexión.",
-      );
+    let response;
+    if (op === "objetivo") {
+      const provider = $("provider-id").value.trim();
+      const jobBody = {
+        ...risk,
+        proveedor_id: provider ? Number(provider) : null,
+      };
+      const r = await fetch("/api/ejecuciones", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(jobBody),
+        signal: controller.signal,
+      });
+      response = await r.json();
+      if (!r.ok)
+        throw Error(
+          typeof response.detail === "string"
+            ? response.detail
+            : "No se pudo iniciar el objetivo.",
+        );
+      const id = response.solicitud_id;
+      $("live-progress").hidden = false;
+      while (["en_curso", "en_cola"].includes(response.estado)) {
+        renderLive(response);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const poll = await fetch("/api/ejecuciones/" + encodeURIComponent(id), {
+          signal: controller.signal,
+        });
+        const snapshot = await poll.json();
+        if (!poll.ok)
+          throw Error(
+            typeof snapshot.detail === "string"
+              ? snapshot.detail
+              : "Se perdió la ejecución. Revisa los agentes antes de repetir.",
+          );
+        response = snapshot;
+      }
+      renderLive(response);
+    } else {
+      const r = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+      response = await r.json();
+      if (!r.ok)
+        throw Error(
+          typeof response.detail === "string"
+            ? response.detail
+            : "El servidor rechazó la solicitud. Revisa los datos o la conexión.",
+        );
+    }
     const seconds = Math.round((performance.now() - started) / 1000);
     renderResult(response, seconds);
     status.className =
@@ -490,8 +597,8 @@ document
   .querySelectorAll("[data-view]")
   .forEach((b) => b.addEventListener("click", () => activate(b.dataset.view)));
 window.addEventListener("hashchange", () => activate(location.hash.slice(1)));
-$("new-request").addEventListener("click", () => choose("riesgos"));
-$("open-flow").addEventListener("click", () => choose("flujo"));
+$("new-request").addEventListener("click", () => choose("objetivo"));
+$("open-flow").addEventListener("click", () => choose("objetivo"));
 $("operation").addEventListener("change", updateOperation);
 $("example").addEventListener("click", () => {
   $("description").value = sample;
@@ -516,3 +623,55 @@ $("download-report").addEventListener("click", () =>
 activate(location.hash.slice(1), false);
 updateOperation();
 loadCatalog();
+
+function renderLive(data) {
+  const root = $("live-steps");
+  root.replaceChildren();
+  for (const p of data.pasos || []) {
+    const row = el("div", null, "trace-step");
+    row.append(
+      el("strong", p.titulo || p.agente),
+      el(
+        "span",
+        p.estado,
+        "pill " +
+          (p.estado === "completado"
+            ? "green"
+            : p.estado === "en_curso"
+              ? "amber"
+              : "muted"),
+      ),
+    );
+    if (p.error) row.append(el("span", p.error, "quiet"));
+    root.append(row);
+  }
+}
+$("load-providers").addEventListener("click", async () => {
+  const button = $("load-providers");
+  button.disabled = true;
+  try {
+    const r = await fetch("/api/proveedores");
+    const data = await r.json();
+    if (!r.ok || data.estado !== "completado")
+      throw Error(data.error || "No se pudo consultar el catálogo.");
+    const select = $("provider-list");
+    select.replaceChildren(el("option", "Selecciona un proveedor"));
+    select.firstChild.value = "";
+    for (const p of data.resultado) {
+      const o = el("option", p.nombre + " · ID " + p.id);
+      o.value = p.id;
+      select.append(o);
+    }
+    select.hidden = false;
+    $("provider-help").textContent = data.resultado.length
+      ? "Selecciona el proveedor del incidente. No se elige automáticamente por similitud de nombre."
+      : "El grupo de Terceros todavía no tiene proveedores registrados.";
+  } catch (e) {
+    $("provider-help").textContent = e.message;
+  } finally {
+    button.disabled = false;
+  }
+});
+$("provider-list").addEventListener("change", () => {
+  $("provider-id").value = $("provider-list").value;
+});

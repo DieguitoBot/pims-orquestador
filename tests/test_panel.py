@@ -76,7 +76,7 @@ class TestConectividad(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(urls),2)
         self.assertEqual(por_id['riesgos']['conectividad'],'responde')
         self.assertEqual(por_id['incidentes']['conectividad'],'no_responde')
-        self.assertEqual(por_id['evidencias']['conectividad'],'pendiente')
+        self.assertEqual(por_id['evidencias']['conectividad'],'sin_configurar')
 
     async def test_url_no_configurada_no_simula_conexion(self):
         with patch.dict(os.environ, {'RIESGOS_URL':'','INCIDENTES_URL':''}):

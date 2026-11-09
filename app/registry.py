@@ -23,3 +23,10 @@ DETALLES = {
 }
 for identificador, detalle in DETALLES.items():
     AGENTS[identificador].update(detalle)
+
+# Operaciones de consulta integradas al objetivo incidente_proveedor.
+for identificador in ("terceros", "evidencias"):
+    AGENTS[identificador]["integracion"] = "adaptador_lectura"
+    AGENTS[identificador]["protocolo"] = "HTTP de consulta"
+AGENTS["terceros"]["siguiente_paso"] = "Configurar TERCEROS_URL y elegir un proveedor real del catálogo. El objetivo integrado consulta su ficha, DPA y riesgo 4×4."
+AGENTS["evidencias"]["siguiente_paso"] = "Configurar EVIDENCIAS_URL, EVIDENCIAS_USUARIO y EVIDENCIAS_CLAVE. Se consulta cobertura e integridad; no se registran ni aprueban evidencias automáticamente."

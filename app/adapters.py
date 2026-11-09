@@ -12,6 +12,9 @@ PATHS = {"incidentes": "/api/analizar", "riesgos": "/api/evaluar"}
 async def ejecutar_http(
     agent_id: str, entrada: dict[str, Any], client: httpx.AsyncClient | None = None
 ) -> ResultadoAgente:
+    if agent_id in {"terceros", "evidencias"}:
+        from .consultations import consultar
+        return await consultar(agent_id, entrada, client)
     if agent_id not in PATHS:
         return ResultadoAgente(agente=agent_id, estado="no_integrado", error="Adaptador no implementado")
     url = agent_url(agent_id)

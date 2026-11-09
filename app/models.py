@@ -29,3 +29,8 @@ class AnalisisIncidente(BaseModel):
 
 class FlujoIncidente(EvaluacionIncidente):
     descripcion: str = Field(min_length=10, max_length=2000)
+
+
+class ObjetivoProveedor(FlujoIncidente):
+    proveedor_id: int | None = Field(default=None, ge=1, strict=True)
+    objetivo: Literal["incidente_proveedor"] = "incidente_proveedor"

@@ -38,7 +38,7 @@ async def comprobar_agentes(client=None):
         headers = {}
         token = agent_token(agente["id"])
         if token: headers["Authorization"] = f"Bearer {token}"
-        ruta = "/api/status" if agente["id"] == "riesgos" else "/"
+        ruta = {"riesgos":"/api/status", "terceros":"/api/estado", "evidencias":"/api/sesion"}.get(agente["id"], "/")
         try:
             respuesta = await c.get(agent_url(agente["id"]) + ruta, headers=headers, timeout=3)
             estado = "responde" if respuesta.is_success else "error"
