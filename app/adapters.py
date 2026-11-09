@@ -33,6 +33,9 @@ async def ejecutar_http(
             data = response.json()
         except ValueError:
             return ResultadoAgente(agente=agent_id, estado="error", error="El agente no devolvió JSON")
+        if isinstance(data, dict) and data.get("error"):
+            return ResultadoAgente(agente=agent_id, estado="error", resultado=data,
+                                   error="El agente informó un error en su respuesta.")
         return ResultadoAgente(agente=agent_id, estado="completado", resultado=data)
     except httpx.TimeoutException:
         return ResultadoAgente(agente=agent_id, estado="error", error="Tiempo de espera agotado")

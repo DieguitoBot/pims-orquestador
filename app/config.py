@@ -1,5 +1,6 @@
 """Configuración no sensible y URLs de agentes por variables de entorno."""
 import os
+import math
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -19,6 +20,7 @@ def agent_token(agent_id: str) -> str | None:
 
 def timeout_seconds() -> float:
     try:
-        return max(1.0, min(float(os.getenv("AGENT_TIMEOUT_SECONDS", "90")), 300.0))
+        valor = float(os.getenv("AGENT_TIMEOUT_SECONDS", "300"))
+        return max(1.0, min(valor, 300.0)) if math.isfinite(valor) else 300.0
     except ValueError:
-        return 90.0
+        return 300.0

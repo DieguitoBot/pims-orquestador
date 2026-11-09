@@ -34,6 +34,8 @@ class IntegracionSimulada(unittest.IsolatedAsyncioTestCase):
                     probabilidad=3, impacto=4), client)
         self.assertEqual(r["estado"], "completado")
         self.assertEqual([x[0] for x in llamadas], ["/api/analizar", "/api/evaluar"])
+        self.assertEqual(llamadas[0][1], {"descripcion_evento": "Fuga de datos personales de estudiantes"})
+        self.assertTrue(llamadas[1][1]["exigir_ia"])
         self.assertEqual(llamadas[1][1]["probabilidad"], 3)
         self.assertIn("exposicion", llamadas[1][1]["descripcion"])
 
