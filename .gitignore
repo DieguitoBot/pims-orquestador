@@ -8,3 +8,6 @@ __pycache__/
 *.db
 *.log
 .DS_Store
+# Fichas privadas de conexión entre grupos
+.conexion-*.json
+.env.grupo

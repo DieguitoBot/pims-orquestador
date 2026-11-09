@@ -1530,3 +1530,38 @@ dialog > div > a {
     scroll-behavior: auto !important;
   }
 }
+
+.provider-row {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+}
+.provider-row input {
+  min-width: 0;
+  flex: 1;
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: 10px;
+  font: inherit;
+  border-radius: 0;
+}
+#provider-list {
+  margin-top: 10px;
+}
+#live-progress {
+  margin-top: 22px;
+}
+#live-progress h2 {
+  font-size: 27px;
+}
+#live-steps .trace-step {
+  flex-wrap: wrap;
+}
+#live-steps .quiet {
+  width: 100%;
+  margin: 0;
+}
+.flow-steps {
+  flex-wrap: wrap;
+}

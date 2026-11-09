@@ -1,67 +1,72 @@
-# Integración PIMS — revisión 09/11/2026
+# Integración PIMS — arquitectura v0.3
 
-## Arquitectura y alcance
+## Una solicitud y cuatro contribuciones
 
-La interfaz se sirve desde FastAPI en el puerto 9000. El navegador solo llama al
-orquestador, que utiliza adaptadores para cada aplicación. No se copian LLM,
-corpus ni tablas a una base central. Las claves se configuran en el servidor.
+El objetivo **Analizar incidente con proveedor** sigue este recorrido:
 
-Riesgos V3 fue probado por el usuario: ejecución real con Ollama, recuperación
-PostgreSQL y `experimento_id` de persistencia. Las pruebas de este cambio son
-simuladas; no se dispone de conexión a sus equipos desde el entorno de revisión.
-Los demás servicios requieren pruebas propias antes de considerarlos integrados.
+1. Incidentes recibe `descripcion_evento` y analiza el caso.
+2. Terceros consulta la ficha del proveedor identificado, su DPA y su riesgo.
+3. Evidencias consulta cobertura e integridad del expediente UNSA, sin modificarlo.
+4. Riesgos recibe el escenario original y contexto atribuido de los servicios que
+   respondieron; genera y guarda su evaluación con sus propias herramientas.
+5. El orquestador reúne pasos, intercambios, pendientes e informe integrado.
 
-## Inventario contrastado con los repositorios
+El ID de proveedor debe elegirse del catálogo real; no se infiere por semejanza
+de nombre. Las respuestas anteriores se etiquetan como contexto por contrastar,
+no como nuevas verdades verificadas. Se limita el contexto enviado, señalando
+truncamientos. Las respuestas completas se conservan en el resultado del flujo.
 
-| ID estable | Repositorio | Operación/transporte verificado | Próximo trabajo |
+Si falla un grupo, Riesgos aún puede analizar el escenario y el contexto que sí
+esté disponible. En ese caso el informe es **parcial**. Solo se marca completado
+cuando las cuatro etapas terminaron correctamente. La revisión humana del
+contenido sigue siendo necesaria incluso con estado completado.
+
+## Adaptadores y contratos
+
+| ID | Repositorio | Contrato | Estado |
 |---|---|---|---|
-| `riesgos` | [DieguitoBot/agente-riesgos-pims](https://github.com/DieguitoBot/agente-riesgos-pims) | `POST /api/evaluar`, `GET /api/status`; V3 en 8180 | Adaptador existente y prueba real individual. Verificar historial desde V3. |
-| `incidentes` | [jherson2024/agente_privacidad](https://github.com/jherson2024/agente_privacidad) | `app/routes/incidents.py`: `POST /api/analizar` recibe **descripcion_evento**, máximo 2000 caracteres | Se corrige el payload del flujo. Necesita URL accesible y prueba real con el grupo. |
-| `evidencias` | [jhuamaniCond/auditoria-agente-tif-2](https://github.com/jhuamaniCond/auditoria-agente-tif-2) | `Entregable-2/agente/servidor_mcp.py`: stdio o streamable HTTP (`--http`, `/mcp`) | Cliente MCP; comenzar con estado_expediente y matriz_cobertura. No saltar aprobaciones ni registrar archivos sin confirmación. |
-| `terceros` | [S-kkipie/agente-terceros-dpa](https://github.com/S-kkipie/agente-terceros-dpa) | GET `/api/tools/list_processors`, `/api/tools/check_dpa_status/<id>`, `/api/tools/evaluate_vendor/<id>` y MCP stdio | Adaptador de lectura y datos de prueba. Conservar su escala 4×4 separada de Riesgos (5×5). |
-| `dsar` | [JeremyCruzGallegos/agente-dsar-iso27701](https://github.com/JeremyCruzGallegos/agente-dsar-iso27701) | README: `/api/case-analysis`, `/api/knowledge/status`; autenticación **X-API-Key** | Confirmar payload y configurar clave de servicio por entorno. No reutilizar Bearer sin adaptación. |
-| `consentimientos` | [Dan-Ar5/Auditoria](https://github.com/Dan-Ar5/Auditoria) | `dashboard.py`: POST `/api/auditar` con `{texto,nombre}` produce **NDJSON**; también MCP stdio | Elegir MCP o parser NDJSON para eventos/resultado. Mantener la cola HITL sin aprobación automática. |
-| `privacy_coach` | [DrN25/Privacy-Coach-Agent-ISO-27701](https://github.com/DrN25/Privacy-Coach-Agent-ISO-27701) | README: FastAPI y MCP para auditoría de esquemas/contratos | Acordar herramientas y autenticación; habilitar análisis, no `dspm_apply_remediation` ni `dspm_reset_repository` desde el orquestador. |
-| `soa_studio` | [gcarrillov/SOA_estudio_agente_AUDITORIA](https://github.com/gcarrillov/SOA_estudio_agente_AUDITORIA) | Capa agéntica HTTP y JWT; base normativa ISO/IEC 27001:2022 | Validar contrato de `/api/agent/run`, permisos y correspondencias con 27701 antes de reutilizar resultados. |
+| `riesgos` | [DieguitoBot/agente-riesgos-pims](https://github.com/DieguitoBot/agente-riesgos-pims) | POST `/api/evaluar`, GET `/api/status`; JSON de V3 | Implementado; prueba real individual previa en Ubuntu |
+| `incidentes` | [jherson2024/agente_privacidad](https://github.com/jherson2024/agente_privacidad) | POST `/api/analizar` con `descripcion_evento` (máx. 2000) | Implementado; necesita prueba con el equipo del grupo |
+| `terceros` | [S-kkipie/agente-terceros-dpa](https://github.com/S-kkipie/agente-terceros-dpa) | GET `/api/proveedores` para elegir ID, GET `/api/proveedores/<id>` devuelve DPA y riesgo | Implementado para consulta; no registra ni aprueba contratos |
+| `evidencias` | [jhuamaniCond/auditoria-agente-tif-2](https://github.com/jhuamaniCond/auditoria-agente-tif-2) | GET `/api/agente/resumen` autenticado mediante sesión; MCP existe como alternativa | Implementado para cobertura/integridad; no registra evidencias |
+| `dsar` | [JeremyCruzGallegos/agente-dsar-iso27701](https://github.com/JeremyCruzGallegos/agente-dsar-iso27701) | POST `/api/case-analysis`, X-API-Key | Puente preparado; adaptador de colaboración pendiente |
+| `consentimientos` | [Dan-Ar5/Auditoria](https://github.com/Dan-Ar5/Auditoria) | POST `/api/auditar` devuelve NDJSON; alternativa MCP stdio | Puente preparado; adaptación especializada pendiente |
+| `privacy_coach` | [DrN25/Privacy-Coach-Agent-ISO-27701](https://github.com/DrN25/Privacy-Coach-Agent-ISO-27701) | FastAPI/MCP para esquemas SQL y contratos | Sin operaciones de análisis expuestas por el puente todavía |
+| `soa_studio` | [gcarrillov/SOA_estudio_agente_AUDITORIA](https://github.com/gcarrillov/SOA_estudio_agente_AUDITORIA) | Catálogo HTTP, JWT y ejecución agéntica | Solo catálogo en el puente; adaptación de ejecución pendiente |
 
-No se infiere que los endpoints tengan el mismo contrato porque usen HTTP.
-El número de ocho corresponde a repositorios, no a subagentes internos.
+El análisis de proveedor usa una matriz **4×4**. Riesgos conserva su **5×5**.
+No sumar ni promediar sus puntuaciones. SoA parte de ISO/IEC 27001:2022, por lo
+que necesita correspondencias justificadas antes de combinar sus conclusiones
+con un PIMS ISO/IEC 27701:2025.
 
-## Entregas sucesivas
+## Recursos distribuidos
 
-1. **Panel y Riesgos:** formulario, fuentes, resultado y enlace al historial; no escribir IDs a mano.
-2. **Incidentes → Riesgos:** prueba con dos aplicaciones reales. Mantener escenario original y etiquetar resultados anteriores como contexto, no como hechos independientes verificados.
-3. **Terceros y Evidencias:** consultas de proveedor y cobertura. Para un incidente con proveedor, proponer el expediente y pedir aprobación antes de registrar documentos.
-4. **DSAR y Consentimientos:** adaptadores autenticados y streaming; revisar las evidencias específicas necesarias.
-5. **Privacy Coach y SoA:** análisis especializados solo con sus insumos y permisos; correspondencia normativa explícita.
+Los agentes conservan modelos, corpus, datos y claves en sus propias computadoras.
+Un puente mínimo escucha en localhost y permite solo rutas específicas con una
+clave distinta de las credenciales internas. Tailscale Serve publica ese puente
+dentro de la red privada del equipo. El orquestador consume esas URLs HTTPS;
+no usa el `localhost` de Diego para localizar a sus compañeros.
 
-Cada entrega se acepta con una llamada directa al agente, otra por el orquestador,
-un caso de fallo, muestras JSON sin PII y una ejecución del flujo elegido.
+Las claves del puente se importan mediante fichas privadas. Las contraseñas de
+Evidencias y las claves internas de otros servicios permanecen en los grupos.
+No se expone Ollama, PostgreSQL, pgAdmin ni rutas de reinicio/aprobación.
 
-## Despliegue de los grupos
+Comandos por grupo y por sistema operativo: [CONECTAR_GRUPOS.md](CONECTAR_GRUPOS.md).
 
-Cada grupo mantiene su servicio encendido y entrega una dirección accesible desde
-el equipo del orquestador. `localhost`/`127.0.0.1` se refiere al equipo que ejecuta
-la llamada; no sirve para conectar automáticamente otra laptop. Se recomienda
-red privada/VPN. Si corren varias aplicaciones en una PC, acordar puertos: varios
-proyectos usan 5000 por defecto, y Consentimientos y MCP Evidencias usan 8765.
-No cambiar todos los proyectos para compartir una única base ni levantar ocho
-copias de los modelos en la misma laptop.
+## Progreso y retención
 
-## Estado visual y trazabilidad
+POST `/api/ejecuciones` inicia el objetivo y devuelve 202 con un ID. GET
+`/api/ejecuciones/<id>` devuelve los estados reales de llamadas iniciadas y
+terminadas. La pantalla consulta ese estado, sin inventar progreso de LLM/RAG.
+Se permite un flujo coordinado activo a la vez. Su registro en memoria dura una
+hora después de terminar; máximo 30 ejecuciones. Usar un solo worker de Uvicorn.
+Al reiniciar, los historiales de los agentes permanecen pero este registro se pierde.
+Antes de repetir un análisis interrumpido, consultar el historial de V3.
 
-"Por integrar" significa que no existe adaptador. "Sin comprobar" no implica
-conectividad. "HTTP responde" no verifica identidad del servicio, calidad del
-análisis, Ollama ni PostgreSQL. El resultado real de cada ejecución determina su
-éxito; un HTTP 200 con campo `error` se trata como fallo. La comprobación de
-conexiones solo usa GET y tiene espera máxima de tres segundos por servicio.
+## Siguiente entrega
 
-El panel muestra duración real y los pasos devueltos al finalizar. No inventa
-progreso interno de LLM/RAG. El historial y las aprobaciones siguen en los agentes;
-la persistencia central y el streaming de flujos son futuras mejoras.
-
-## Límites y datos
-
-No publicar servicios locales sin autenticación. No incluir claves en el catálogo,
-URLs con credenciales, Git, resultados de prueba o capturas. Usar datos ficticios.
-La interfaz sirve sus recursos localmente y no usa CDN ni telemetría externa.
+Después de la prueba distribuida de cuatro agentes: integrar DSAR y
+Consentimientos para solicitudes específicas; luego Privacy Coach y SoA con sus
+insumos y permisos. No ejecutar a los ocho sobre el mismo texto indiscriminadamente.
+La gestión de evidencias del caso y las puertas de aprobación son un trabajo
+posterior: el flujo actual consulta el expediente, no escribe en él.

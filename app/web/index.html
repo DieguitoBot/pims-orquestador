@@ -77,7 +77,6 @@
                 punto de entrada.
               </p>
             </div>
-
             <div class="hero-action">
               <p class="eyebrow">COMENZAR POR UN CASO</p>
               <button class="primary" id="new-request">
@@ -103,8 +102,8 @@
             </div>
             <div class="metric-note">
               <span class="small-label">RECORRIDO DISPONIBLE</span
-              ><strong>Orquestador → Riesgos V3</strong
-              ><span>Ejecuta un caso y consulta su evaluación guardada.</span>
+              ><strong>Incidente → análisis integrado</strong
+              ><span>Una solicitud. Resultados atribuidos a cada agente.</span>
             </div>
           </div>
           <div class="section-heading">
@@ -147,13 +146,16 @@
             <form class="surface form-panel" id="request-form">
               <label for="operation">Tipo de solicitud</label
               ><select id="operation">
+                <option value="objetivo">
+                  Analizar incidente con proveedor · trabajo coordinado
+                </option>
                 <option value="riesgos">Evaluación de Riesgos · V3</option>
                 <option value="incidentes">Análisis de Incidentes</option>
                 <option value="flujo">Flujo Incidentes → Riesgos</option>
               </select>
               <p class="field-help" id="operation-help">
-                Envía el caso a V3 y devuelve su evaluación. El agente conserva
-                el resultado en su propia base.
+                Una sola solicitud coordina Incidentes, Terceros, Evidencias y
+                Riesgos. Recibirás un informe conjunto y los pasos pendientes.
               </p>
               <div class="label-row">
                 <label for="description">Escenario a analizar</label
@@ -173,6 +175,35 @@
                 Expón hechos conocidos. Los controles que no mencionas deben
                 considerarse por verificar.
               </p>
+              <fieldset id="provider-fields">
+                <legend>Proveedor involucrado</legend>
+                <label for="provider-id"
+                  >ID del proveedor en el agente de Terceros</label
+                >
+                <div class="provider-row">
+                  <input
+                    id="provider-id"
+                    min="1"
+                    placeholder="Por ejemplo: 4"
+                    step="1"
+                    type="number"
+                  /><button class="secondary" id="load-providers" type="button">
+                    Consultar catálogo
+                  </button>
+                </div>
+                <select
+                  aria-label="Proveedores registrados"
+                  hidden=""
+                  id="provider-list"
+                >
+                  <option value="">Selecciona un proveedor</option>
+                </select>
+                <p class="field-help" id="provider-help">
+                  Elige un proveedor registrado. Si no conoces su ID, el informe
+                  lo señalará como dato pendiente y continuará con los demás
+                  análisis.
+                </p>
+              </fieldset>
               <fieldset id="risk-fields">
                 <legend>Valoración inicial</legend>
                 <div class="two-fields">
@@ -212,8 +243,9 @@
                 >
               </fieldset>
               <div class="inline-note" hidden="" id="flow-caution">
-                Necesita ambos servicios accesibles. Incidentes se ejecuta
-                primero; si falla, el flujo se detiene.
+                Cada grupo debe mantener su servicio activo. Si falta un dato o
+                una conexión, el informe será parcial y mostrará cómo
+                completarlo.
               </div>
               <button class="primary submit" id="execute" type="submit">
                 Ejecutar solicitud <span aria-hidden="true">→</span>
@@ -246,6 +278,18 @@
             id="execution-status"
             role="status"
           ></div>
+          <section
+            aria-label="Avance real de los agentes"
+            class="surface"
+            hidden=""
+            id="live-progress"
+          >
+            <h2>Coordinación en curso</h2>
+            <p class="quiet">
+              Estos estados corresponden a llamadas reales del orquestador.
+            </p>
+            <div aria-live="polite" id="live-steps"></div>
+          </section>
           <section
             aria-label="Resultado de la solicitud"
             class="surface result-panel"
@@ -285,18 +329,20 @@
           <article class="surface flow-card">
             <div class="label-row">
               <span class="pill amber"
-                >Implementado · prueba real pendiente</span
-              ><span class="quiet">02 agentes</span>
+                >Flujo coordinado · requiere servicios conectados</span
+              ><span class="quiet">04 agentes</span>
             </div>
-            <h2>Del incidente a su evaluación de riesgo</h2>
+            <h2>Analizar un incidente con proveedor</h2>
             <p>
-              Analiza el evento y entrega el resultado a Riesgos como contexto
-              adicional, conservando el escenario original.
+              Una solicitud consulta el incidente, la ficha del proveedor y la
+              cobertura del expediente. Riesgos utiliza esos resultados como
+              contexto para su evaluación.
             </p>
             <div class="flow-steps">
               <span>Incidentes</span><b aria-hidden="true">→</b
-              ><span>Riesgos V3</span><b aria-hidden="true">→</b
-              ><span>Resultado integrado</span>
+              ><span>Terceros</span><b aria-hidden="true">→</b
+              ><span>Evidencias</span><b aria-hidden="true">→</b
+              ><span>Riesgos</span>
             </div>
             <p class="quiet">
               Si un servicio falla, el resultado muestra el paso fallido. No se
@@ -308,11 +354,11 @@
           </article>
           <article class="surface upcoming">
             <span class="pill muted">Planificado</span>
-            <h2>Proveedor involucrado en una brecha</h2>
+            <h2>Ampliar según el caso</h2>
             <p>
-              Incidentes + Terceros + Riesgos + Evidencias. Requiere adaptar la
-              consulta de proveedores y la gestión de expedientes; aún no se
-              puede ejecutar.
+              DSAR, Consentimientos, Privacy Coach y SoA se incorporarán cuando
+              la solicitud necesite sus capacidades y sus contratos estén
+              adaptados. No se consulta a los ocho indiscriminadamente.
             </p>
             <button class="text-button" data-view="integracion">
               Ver dependencias →

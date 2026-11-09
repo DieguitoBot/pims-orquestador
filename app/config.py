@@ -9,12 +9,12 @@ load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 
 def agent_url(agent_id: str) -> str | None:
-    name = {"riesgos": "RIESGOS_URL", "incidentes": "INCIDENTES_URL"}.get(agent_id)
+    name = {"riesgos": "RIESGOS_URL", "incidentes": "INCIDENTES_URL", "terceros": "TERCEROS_URL", "evidencias": "EVIDENCIAS_URL", "dsar": "DSAR_URL", "consentimientos": "CONSENTIMIENTOS_URL", "privacy_coach": "PRIVACY_COACH_URL", "soa_studio": "SOA_STUDIO_URL"}.get(agent_id)
     return os.getenv(name, "").rstrip("/") or None if name else None
 
 
 def agent_token(agent_id: str) -> str | None:
-    name = {"riesgos": "RIESGOS_TOKEN", "incidentes": "INCIDENTES_TOKEN"}.get(agent_id)
+    name = {"riesgos": "RIESGOS_TOKEN", "incidentes": "INCIDENTES_TOKEN", "terceros": "TERCEROS_TOKEN", "evidencias": "EVIDENCIAS_TOKEN", "dsar": "DSAR_TOKEN", "consentimientos": "CONSENTIMIENTOS_TOKEN", "privacy_coach": "PRIVACY_COACH_TOKEN", "soa_studio": "SOA_STUDIO_TOKEN"}.get(agent_id)
     return os.getenv(name, "") or None if name else None
 
 
