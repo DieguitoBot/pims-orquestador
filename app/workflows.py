@@ -10,7 +10,7 @@ from .models import EvaluacionIncidente
 
 async def flujo_incidente_riesgo(data: EvaluacionIncidente, client: httpx.AsyncClient | None = None) -> dict:
     solicitud_id = str(uuid4())
-    incidente = await ejecutar_http("incidentes", {"descripcion": data.descripcion}, client)
+    incidente = await ejecutar_http("incidentes", {"descripcion_evento": data.descripcion}, client)
     pasos = [incidente.model_dump()]
     if incidente.estado != "completado":
         return {"solicitud_id": solicitud_id, "estado": "incompleto", "pasos": pasos,
@@ -21,6 +21,7 @@ async def flujo_incidente_riesgo(data: EvaluacionIncidente, client: httpx.AsyncC
         "probabilidad": data.probabilidad,
         "impacto": data.impacto,
         "rol_privacidad": data.rol_privacidad,
+        "exigir_ia": data.exigir_ia,
     }
     riesgo = await ejecutar_http("riesgos", entrada_riesgo, client)
     pasos.append(riesgo.model_dump())
